@@ -15,24 +15,12 @@ AddEventHandler("xgc-tuner:openTuner", () => {
   if (isGuiOpen) return;
   let ped = GetPlayerPed(-1);
   let vehicle = GetVehiclePedIsUsing(ped);
-
   // Lets check if they're the driver
   if (GetPedInVehicleSeat(vehicle, -1) === ped) {
     let vehiclePlate = GetVehicleNumberPlateText(vehicle);
     let alreadyExist = defaultVehicleValues.findIndex(e => e.plate === vehiclePlate);
-
     if (alreadyExist < 0) {
-      
-      // Set the default values (for UI)
-      currentVehicle.push({
-        plate: vehiclePlate,
-        boost: 0,
-        acceleration: 0,
-        gearchange: 0,
-        braking: 5,
-        drivetrain: 5,
-      });
-
+      currentVehicle.push({ plate: vehiclePlate, boost: 0, acceleration: 0, gearchange: 0, braking: 5, drivetrain: 5 });
       defaultVehicleValues.push({
         plate: vehiclePlate,
         fInitialDriveForce: GetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDriveForce"),
@@ -44,16 +32,11 @@ AddEventHandler("xgc-tuner:openTuner", () => {
         fLowSpeedTractionLossMult: GetVehicleHandlingFloat(vehicle, "CHandlingData", "fLowSpeedTractionLossMult"),
         fDriveInertia: GetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia"),
       });
-
     }
-    
     let tuneSettings = currentVehicle.find(e => e.plate === vehiclePlate);
     openTunerHud(tuneSettings)
   }
-
 });
-
-
 
 function openTunerHud(data) {
   isGuiOpen = true;
@@ -78,8 +61,8 @@ function applyTune(data) {
   } else {
     let defaultDriveForce = defaultVehicleValues[index].fInitialDriveForce;
     let defaultTractionLoss = defaultVehicleValues[index].fLowSpeedTractionLossMult;
-    let newBoost = (defaultDriveForce + defaultDriveForce * (data.boost / 100));
-    let newLoss = (defaultTractionLoss + defaultTractionLoss * (data.boost / 10));
+    let newBoost = defaultDriveForce + defaultDriveForce * (data.boost / 200);
+    let newLoss = defaultTractionLoss + defaultTractionLoss * (data.boost / 20);
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDriveForce", newBoost);
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fLowSpeedTractionLossMult", newLoss);
     console.log("New Boost: " + newBoost);
@@ -90,7 +73,7 @@ function applyTune(data) {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", defaultVehicleValues[index].fDriveInertia);
   } else {
     let defInertia = defaultVehicleValues[index].fDriveInertia;
-    let newInertia = (defInertia - defInertia * (data.boost / 30));
+    let newInertia = defInertia + defInertia * (data.boost / 30);
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", newInertia)
     console.log("New Inertia: " + newInertia);
   }
@@ -118,9 +101,9 @@ function applyTune(data) {
   }
 
   if (data.braking === 5) {
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", defaultVehicleValues[index].fBrakeBiasFront)
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", defaultVehicleValues[index].fBrakeBiasFront);
   } else {
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", data.braking / 10)
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", data.braking / 10);
   }
 }
 
