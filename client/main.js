@@ -90,7 +90,6 @@ function applyTune(data) {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveBiasFront", defaultVehicleValues[index].fDriveBiasFront)
   } else {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveBiasFront", data.drivetrain);
-    console.log("New drivetrain: " + data.drivetrain); // Just debug console logs
   }
   
   if (data.uiValues.braking === 5) {
