@@ -34,14 +34,15 @@ AddEventHandler("xgc-tuner:openTuner", () => {
       });
     }
     let tuneSettings = currentVehicle.find(e => e.plate === vehiclePlate);
-    openTunerHud(tuneSettings)
+    let currentHandling = defaultVehicleValues.find(e => e.plate === vehiclePlate);
+    openTunerHud(tuneSettings, currentHandling)
   }
 });
 
-function openTunerHud(data) {
+function openTunerHud(tune, currentHandling) {
   isGuiOpen = true;
   SetNuiFocus(true, true);
-  SendNuiMessage(JSON.stringify({ type: "tunerchip-ui", display: true, tune: JSON.stringify(data) }));
+  SendNuiMessage(JSON.stringify({ type: "tunerchip-ui", display: true, tune: JSON.stringify(tune), currentHandling: JSON.stringify(currentHandling) }));
 }
 
 function applyTune(data) {
@@ -49,61 +50,53 @@ function applyTune(data) {
   let index = defaultVehicleValues.findIndex(e => e.plate === data.plate);
   let index2 = currentVehicle.findIndex(e => e.plate === data.plate);
 
-  currentVehicle[index2].boost = data.boost;
-  currentVehicle[index2].acceleration = data.acceleration;
-  currentVehicle[index2].gearchange = data.gearchange;
-  currentVehicle[index2].braking = data.braking;
-  currentVehicle[index2].drivetrain = data.drivetrain;
+  // console.log(data)
 
-  if (data.boost === 0) {
+  currentVehicle[index2].boost = data.uiValues.boost;
+  currentVehicle[index2].acceleration = data.uiValues.acceleration;
+  currentVehicle[index2].gearchange = data.uiValues.gearchange;
+  currentVehicle[index2].braking = data.uiValues.braking;
+  currentVehicle[index2].drivetrain = data.uiValues.drivetrain;
+
+  if (data.uiValues.boost !== 0) {
+    let defaultTractionLoss = defaultVehicleValues[index].fLowSpeedTractionLossMult;
+    let newLoss = defaultTractionLoss + defaultTractionLoss * (data.boost / 20);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDriveForce", data.boost);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fLowSpeedTractionLossMult", newLoss);
+
+  } else {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDriveForce", defaultVehicleValues[index].fInitialDriveForce);
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fLowSpeedTractionLossMult", defaultVehicleValues[index].fLowSpeedTractionLossMult);
-  } else {
-    let defaultDriveForce = defaultVehicleValues[index].fInitialDriveForce;
-    let defaultTractionLoss = defaultVehicleValues[index].fLowSpeedTractionLossMult;
-    let newBoost = defaultDriveForce + defaultDriveForce * (data.boost / 200);
-    let newLoss = defaultTractionLoss + defaultTractionLoss * (data.boost / 20);
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDriveForce", newBoost);
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fLowSpeedTractionLossMult", newLoss);
-    console.log("New Boost: " + newBoost);
-    console.log("New Traction Loss: " + newLoss);
   }
 
-  if (data.boost === 0 && data.acceleration === 0) {
+  if (data.uiValues.boost === 0 && data.uiValues.acceleration === 0) {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", defaultVehicleValues[index].fDriveInertia);
   } else {
-    let defInertia = defaultVehicleValues[index].fDriveInertia;
-    let newInertia = defInertia + defInertia * (data.boost / 30);
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", newInertia)
-    console.log("New Inertia: " + newInertia);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", data.uiValues.acceleration)
   }
 
-  if (data.gearchange === 0) {
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleUpShift", defaultVehicleValues[index].fClutchChangeRateScaleUpShift)
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleDownShift", defaultVehicleValues[index].fClutchChangeRateScaleDownShift)
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDragCoeff", defaultVehicleValues[index].fInitialDragCoeff)
-  } else {
-    let defScale = defaultVehicleValues[index].fClutchChangeRateScaleUpShift
-    let newScale = defScale + data.gearchange;
+  if (data.uiValues.gearchange !== 0) {
     let newDrag = (defaultVehicleValues[index].fInitialDragCoeff + (data.gearchange / 45));
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleUpShift", newScale)
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleDownShift", newScale)
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleUpShift", data.gearchange)
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleDownShift", data.gearchange)
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDragCoeff", newDrag)
-    console.log("New gear up/down: " + newScale);
-    console.log("New drag: " + newDrag)
+  } else {
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleUpShift", defaultVehicleValues[index].fClutchChangeRateScaleUpShift);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fClutchChangeRateScaleDownShift", defaultVehicleValues[index].fClutchChangeRateScaleDownShift);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDragCoeff", defaultVehicleValues[index].fInitialDragCoeff);
   }
 
-  if (data.drivetrain === 5) {
+  if (data.uiValues.drivetrain === 5) {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveBiasFront", defaultVehicleValues[index].fDriveBiasFront)
   } else {
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveBiasFront", (data.drivetrain / 10));
-    console.log("New drivetrain: " + (data.drivetrain / 10));
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveBiasFront", data.drivetrain);
+    console.log("New drivetrain: " + data.drivetrain); // Just debug console logs
   }
-
-  if (data.braking === 5) {
+  
+  if (data.uiValues.braking === 5) {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", defaultVehicleValues[index].fBrakeBiasFront);
   } else {
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", data.braking / 10);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fBrakeBiasFront", data.braking);
   }
 }
 
