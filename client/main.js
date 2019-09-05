@@ -72,7 +72,8 @@ function applyTune(data) {
   if (data.uiValues.boost === 0 && data.uiValues.acceleration === 0) {
     SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", defaultVehicleValues[index].fDriveInertia);
   } else {
-    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", data.uiValues.acceleration)
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fDriveInertia", data.acceleration);
+    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fInitialDriveForce", data.boost);
   }
 
   if (data.uiValues.gearchange !== 0) {
