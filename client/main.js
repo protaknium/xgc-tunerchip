@@ -6,11 +6,6 @@ let ESX = null;
 
 emit("esx:getSharedObject", (obj) => ESX = obj);
 
---Käytetään itemiä
---RegisterCommand("tuner", () => {
---  emit("xgc-tuner:openTuner")
---});
-
 RegisterNetEvent("xgc-tuner:openTuner")
 AddEventHandler("xgc-tuner:openTuner", () => {
   if (isGuiOpen) return;
